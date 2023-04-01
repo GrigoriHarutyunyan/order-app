@@ -49,7 +49,7 @@ class OrderController extends Controller
      *
      * store Order in Orders table
      */
-    public function store (OrderRequest $request): JsonResponse
+    public function store(OrderRequest $request): JsonResponse
     {
         $orderData = $request->validated();
         $this->orderService->storeOrder($orderData);

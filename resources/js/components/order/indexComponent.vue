@@ -11,7 +11,7 @@
                 <div class="card card-xl-stretch mb-5 mb-xl-8">
                     <div class="card-body pt-0">
                         <div id="kt_table_users_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
-                            <div v-if="orders" class="table-responsive">
+                            <div v-if="allOrders" class="table-responsive">
                                 <table class="table align-middle table-row-dashed fs-6 gy-5 no-footer"
                                        id="kt_table_users">
                                     <thead>
@@ -26,7 +26,7 @@
                                     </tr>
                                     </thead>
                                     <tbody class="text-gray-600 fw-bold">
-                                    <tr v-for="order in orders">
+                                    <tr v-for="order in allOrders.data">
                                         <td class="text-center">
                                             <span class="align-items-center">{{ order.id}}</span>
                                         </td>
@@ -55,10 +55,10 @@
                                 </table>
                                 <elem-pagination
                                     @current-change="pagination"
-                                    :page-size="orders.per_page"
-                                    :current-page="orders.current_page"
+                                    :page-size="allOrders.per_page"
+                                    :current-page="allOrders.current_page"
                                     layout="prev, pager, next"
-                                    :total="orders.total">
+                                    :total="allOrders.total">
                                 </elem-pagination>
                             </div>
                         </div>
@@ -79,7 +79,6 @@
         />
         <filter-modal
             v-if="showFilterModal"
-            @filtered-orders="handleFilteredOrders"
             @close="closeFilterModal"
         />
     </div>
@@ -90,8 +89,8 @@
 import createModal from "./createComponent";
 import editModal from "./editComponent";
 import filterModal from "./filterComponent"
+import { mapGetters, mapActions } from "vuex";
 import moment from 'moment'
-
 
 import {
     Pagination as elemPagination,
@@ -113,29 +112,31 @@ export default {
             showEditModal: false,
             showFilterModal: false,
             visible: false,
-            orders: null,
             selectedOrderId: null,
             currentPage: null
         }
     },
+    computed: mapGetters(["allOrders"]),
+
     mounted() {
         this.getOrders()
     },
     methods: {
         openCreateModal() {
-            this.showCreateModal = true;
+            this.showCreateModal = true
         },
+
         closeCreateModal() {
-            this.showCreateModal = false;
+            this.showCreateModal = false
         },
 
         openEditOrderModal(orderId) {
-            this.showEditModal = true;
-            this.selectedOrderId = orderId;
+            this.showEditModal = true
+            this.selectedOrderId = orderId
         },
         closeOrderEditModal() {
-            this.showEditModal = false;
-            this.selectedOrderId = null;
+            this.showEditModal = false
+            this.selectedOrderId = null
         },
 
         openFilterModal() {
@@ -149,27 +150,10 @@ export default {
         dateFormat(date) {
             return moment(date).format('MM/DD/YYYY hh:mm')
         },
-
-        getOrders(page = null) {
-            if (!page) {
-                page = 1
-            }
-            this.$axios.get(`orders?page=${page}`
-            ).then((res) => {
-                this.orders = res.data.orders.data
-            }).catch(error => {
-                if (error) {
-                    console.log(error)
-                }
-            });
-        },
+        ...mapActions(["getOrders"]),
         pagination(val) {
             this.currentPage = val
             this.getOrders(val)
-        },
-
-        handleFilteredOrders(data) {
-            this.orders = data.data
         },
 
         resetFilter() {

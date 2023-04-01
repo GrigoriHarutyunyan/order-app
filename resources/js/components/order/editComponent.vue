@@ -36,7 +36,7 @@
             </el-row>
         </el-form>
         <template slot="footer">
-            <el-button type="primary" @click="editOrder">Submit</el-button>
+            <el-button type="primary" @click="edit">Submit</el-button>
         </template>
     </el-dialog>
 </template>
@@ -51,6 +51,9 @@ import {
     Col as ElCol,
     Row as ElRow,
 } from "element-ui"
+
+import {mapGetters, mapActions} from "vuex";
+
 export default {
     name: "edit-modal",
     components: {
@@ -70,44 +73,50 @@ export default {
                 weight: "",
                 description: "",
                 total_price: "",
+                order_id: ""
             },
             errors: null,
             success: null
         }
     },
+
+    computed: mapGetters(["orderByIdRes", "editOrderRes"]),
+
     mounted() {
-        this.getOrder(this.orderId)
+        this.getOrderById(this.orderId,).then(res => {
+            if (res.success) {
+                this.data.product_name = res.order.product_name
+                this.data.weight = res.order.weight
+                this.data.description = res.order.description
+                this.data.total_price = res.order.total_price
+            }
+        }).catch(error => {
+            if (error) {
+                console.log(error)
+            }
+        });
     },
+
     methods: {
         closeModal() {
             this.$emit("close")
         },
-        getOrder(orderId) {
-            this.$axios.get(`get-order/${orderId}`
-            ).then((res) => {
-                if (res.data.success) {
-                    this.data.product_name = res.data.order.product_name
-                    this.data.weight = res.data.order.weight
-                    this.data.description = res.data.order.description
-                    this.data.total_price = res.data.order.total_price
-                }
-            }).catch(error => {
-                if (error) {
-                    console.log(error)
-                }
-            });
-        },
-        editOrder() {
-            this.$axios.put(`orders/${this.orderId}`,
-                {
-                    product_name: this.data.product_name,
-                    weight: this.data.weight,
-                    description: this.data.description,
-                    total_price: this.data.total_price,
-                }
-            ).then((res) => {
-                if (res.data.success) {
-                    this.success = res.data.message
+
+        ...mapActions(["getOrderById", "editOrder"]),
+
+        edit() {
+            const order = {
+                product_name: this.data.product_name,
+                weight: this.data.weight,
+                description: this.data.description,
+                total_price: this.data.total_price,
+                order_id: this.orderId
+            }
+
+            this.editOrder(order).then(res => {
+                if (res.success) {
+                    this.errors = null
+                    this.success = res.message
                     setTimeout(() => location.reload(), 1500)
                 }
             }).catch(error => {

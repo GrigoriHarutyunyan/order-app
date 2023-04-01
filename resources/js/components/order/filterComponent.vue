@@ -37,6 +37,7 @@ import {
     Col as ElCol,
     Row as ElRow,
 } from "element-ui";
+import {mapGetters, mapActions} from "vuex";
 
 export default {
     name: "filter-modal",
@@ -55,39 +56,34 @@ export default {
                 product_name: '',
                 total_price: '',
             },
-            filteredOrders: null,
             errors: null,
             success: null
         }
     },
+
+    computed: mapGetters(['filteredOrdersRes']),
+
     methods: {
         close() {
             this.$emit('close')
         },
+
+        ...mapActions(["filterOrders"]),
+
         filter() {
-            this.$axios.post('orders',
-                {
-                    product_name: this.data.product_name,
-                    total_price: this.data.total_price,
-                },
-            ).then((res) => {
-                if (res.data.success) {
-                    this.errors = null
-                    this.success = res.data.message
-                    this.filteredOrders = res.data.orders
-                    this.sendDataToIndex(this.filteredOrders)
+            const data = {
+                product_name: this.data.product_name,
+                total_price: this.data.total_price,
+            }
+
+            this.filterOrders(data).then(res => {
                     this.close()
-                }
             }).catch(error => {
                 if (error.response) {
                     this.errors = error.response.data.errors
                 }
             });
         },
-
-        sendDataToIndex(filteredOrders) {
-            this.$emit('filtered-orders', filteredOrders)
-        }
     }
 }
 </script>
